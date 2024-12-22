@@ -246,9 +246,6 @@ p2 <- rbind(c(4, 0), c(5, 0), c(5, 3), c(4, 2), c(4, 0))
       # see the data class again
       class(wells_sf)
       str(wells_sf)            
-      #plot the point geometry
-      plot(wells_sf %>% select(geometry)) #it represents nothing meaningful becuase
-      #it has no CRS mentiond
       # check the crs
       st_crs(wells_sf) #see the CRS is NA, we need to put the CRS
       # put the crs 4269
@@ -256,4 +253,44 @@ p2 <- rbind(c(4, 0), c(5, 0), c(5, 3), c(4, 2), c(4, 0))
       # check it again
       st_crs(wells_sf)
       plot(wells_sf %>% select(acres))
+
+      
+      
+#===============================================================================
+#---- Conversion to and from sp objects ----
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       
