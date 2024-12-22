@@ -235,9 +235,25 @@ p2 <- rbind(c(4, 0), c(5, 0), c(5, 3), c(4, 2), c(4, 0))
 #---- Turning data frame with points into simple feature object ----
       # load irrigation wells registration data
       wells <- readRDS("Data/Chapter 2/well_registration.rds")
-      
       # see data class
       class(wells)
       # see data structure
       str(wells)
+      
+      
+      # convert data frame variable into sf object
+      wells_sf <- st_as_sf(wells, coords = c("longdd", "latdd"))
+      # see the data class again
+      class(wells_sf)
+      str(wells_sf)            
+      #plot the point geometry
+      plot(wells_sf %>% select(geometry)) #it represents nothing meaningful becuase
+      #it has no CRS mentiond
+      # check the crs
+      st_crs(wells_sf) #see the CRS is NA, we need to put the CRS
+      # put the crs 4269
+      st_crs(wells_sf) <- 4269
+      # check it again
+      st_crs(wells_sf)
+      plot(wells_sf %>% select(acres))
       

@@ -3,7 +3,7 @@
     "path": "C:/Users/dewan/OneDrive - University of Georgia/Documents/R and GIS/R-in-GIS/r scripts/chapter 2 - sfg details.R",
     "project_path": "r scripts/chapter 2 - sfg details.R",
     "type": "r_source",
-    "hash": "2141636984",
+    "hash": "509885767",
     "contents": "",
     "dirty": false,
     "created": 1734908188488.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "242,0",
-        "scrollLine": "217"
+        "cursorPosition": "258,0",
+        "scrollLine": "233"
     },
     "folds": "",
-    "lastKnownWriteTime": 1734908759,
+    "lastKnownWriteTime": 1734909419,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1734908759993,
+    "last_content_update": 1734909419715,
     "read_only": false,
     "read_only_alternatives": []
 }
