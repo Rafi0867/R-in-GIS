@@ -252,22 +252,60 @@ p2 <- rbind(c(4, 0), c(5, 0), c(5, 3), c(4, 2), c(4, 0))
       st_crs(wells_sf) <- 4269
       # check it again
       st_crs(wells_sf)
-      plot(wells_sf %>% select(acres))
+      table(wells$nrdname)
+      plot(wells_sf %>% select(acres) %>% 
+             filter(wells_sf$nrdname == "Central Platte") %>%
+             filter(acres >400))
 
-      
       
 #===============================================================================
 #---- Conversion to and from sp objects ----
+    # convert into sp object
+      wells_sp <- as(wells_sf, "Spatial")
+    # check the class
+      class(wells_sp)
+
+    
+    # convert the sp object back to sf again
+      wells_sf_2 <- st_as_sf(wells_sp)
+    # check the class
+      class(wells_sf_2)
+
       
+#===============================================================================
+#--- Non-spatial transformation of sf ----
+   # using dplyr in the sf object to show the similarities
+      #--- here is what the data looks like ---#
+      dplyr::select(wells_sf, wellid, nrdname, acres, regdate, nrdname)
       
+    #--- do some transformations ---#
+      wells_sf %>%
+        #--- select variables (geometry will always remain after select) ---#
+        dplyr::select(wellid, nrdname, acres, regdate, nrdname) %>%
+        #--- removes observations with acre < 30  ---#
+        dplyr::filter(acres > 30) %>%
+        #--- hectare instead of acre ---#
+        dplyr::mutate(hectare = acres * 0.404686)     
+  
+      wells_sf%>%
+        select(wellid, acres, nrdname, regdate)%>%
+        filter(acres >30)%>%
+        mutate(hectare = acres * 0.404)
+      #--- summary by group ---#
+      wells_by_nrd <-
+        wells_sf[1:100, ] %>%
+        #--- group by nrdname ---#
+        dplyr::group_by(nrdname) %>%
+        #--- summarize ---#
+        dplyr::summarize(tot_acres = sum(acres, na.rm = TRUE))
       
+      #--- take a look ---#
+      wells_by_nrd      
+      #--- remove geometry ---#
+      wells_no_longer_sf <- sf::st_drop_geometry(wells_sf)
       
-      
-      
-      
-      
-      
-      
+      #--- take a look ---#
+      head(wells_no_longer_sf)      
       
       
       
