@@ -307,9 +307,23 @@ p2 <- rbind(c(4, 0), c(5, 0), c(5, 3), c(4, 2), c(4, 0))
       #--- take a look ---#
       head(wells_no_longer_sf)      
       
+      wells_no_longer_sf %>%
+        #--- group by nrdname ---#
+        dplyr::group_by(nrdname) %>%
+        #--- summarize ---#
+        dplyr::summarize(tot_acres = sum(acres, na.rm = TRUE))      
+
       
+#===============================================================================
+#---- using data table ----
+      #--- convert an sf to data.table ---#
+        wells_dt <- data.table::data.table(wells_sf)
+      class(wells_dt)      
       
-      
+      #--- work on the first 10 ---#
+      wells_dt[1:10, ]$geometry %>%
+        sf::st_buffer(dist = 2) %>%
+        head()
       
       
       
