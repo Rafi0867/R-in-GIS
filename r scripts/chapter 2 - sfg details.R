@@ -325,19 +325,89 @@ p2 <- rbind(c(4, 0), c(5, 0), c(5, 3), c(4, 2), c(4, 0))
         sf::st_buffer(dist = 2) %>%
         head()
       
+#===============================================================================
+#--- Non interactive Geometrical Operation ----
+     #--- creating buffer around points ---#
+      #--- read wells location data ---#
+      urnrd_wells_sf <-
+        readRDS("Data/Chapter 2/urnrd_wells.rds") %>%
+        #--- project to UTM 14N WGS 84 ---#
+        st_transform(32614)
       
+      #--- plot the points ---#
+      ggplot(urnrd_wells_sf) +
+        geom_sf(size = 0.4, color = "red") +
+        theme_void()      
+      #--- now lets create the buffer at "dist" m around the points---#
+      wells_buffer <- st_buffer(urnrd_wells_sf, dist = 1500)
       
+      #--- Plot the buffer ---#
+      ggplot() +
+        geom_sf(data = urnrd_wells_sf , size = 1.1, 
+                color = "red") +
+        geom_sf(data = wells_buffer %>% filter(acres>200), color = "darkgreen", 
+                fill = "green", alpha = 0.2) +
+        theme_void()
+
+#===============================================================================
+#--- Creating buffer around the polygons ----
+  #--- load the data and select 3 counties ---#
+      county_boundary <- readRDS("Data/Chapter 2/NE_county_borders.rds") %>%
+        filter(NAME %in% c("Chase", "Dundy", "Perkins")) %>%
+        st_transform(32614)
       
+  #--- plot the county boundery polygons with previous well data ---#
+      ggplot(county_boundary)+
+        geom_sf()+
+        geom_sf(data = county_boundary, aes(fill = NAME)) +
+        #scale_fill_brewer(name = "County", palette = "RdYlGn") +
+        geom_sf(data = urnrd_wells_sf, color = "red", size = 0.2)+
+        theme_void()
+
+  #--- creating buffer at 'dist" meter arounf the counties ---#
+      NE_buffer <- st_buffer(county_boundary, dist = 2000)
+      ggplot() +
+        geom_sf(data = NE_buffer, fill = "blue", alpha = 0.3) +
+        geom_sf(data = county_boundary, aes(fill = NAME)) +
+        scale_fill_brewer(name = "County", palette = "RdYlGn") +
+        theme_void()      
       
+#--- calculating the area of a polygon ----
+      #--- generate area by polygon ---#
+      (
+        NE_counties <- dplyr::mutate(county_boundary, 
+                                     area = st_area(county_boundary))
+      )
+      # checking the class
+      class(NE_counties$area)
+      # we can not do any operation with this form. we need to transform
+      # converting the area into a numeric format
+        NE_counties <- dplyr::mutate(NE_counties, area = as.numeric(area))
+      #chekc the class again
+        class(NE_counties$area)
+
+#--- finding the centeroid of the polygon ----
+        #--- create centroids ---#
+          NE_centroids <- st_centroid(NE_counties)
+        # plot the centeroid with the polygon
+        ggplot()+
+          geom_sf(data = county_boundary)+
+          geom_sf(data = NE_centroids)+
+          theme_void()
       
-      
-      
-      
-      
-      
-      
-      
-      
+      #----------------------     TRIAL     -----------------------------
+        #create a buffer around the ceteroid and plot the wells within the buffer
+        buffer <- st_buffer(NE_centroids, dist = 5000)  
+        #plot everything
+        ggplot()+
+          geom_sf(data = county_boundary)+
+          geom_sf(data = urnrd_wells_sf, color = "red")+
+          geom_sf(data = buffer, color = "black", fill = NA)+
+          theme_void()
+      #-------------------------------------------------------------------
+        
+
+
       
       
       
