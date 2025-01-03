@@ -6,7 +6,8 @@ pacman::p_load(
   tmap, # make maps
   mapview, # create an interactive map
   patchwork, # arranging maps
-  ggplot2
+  ggplot2,
+  rmapshaper
 )
 library(ggplot2)
 
@@ -366,6 +367,7 @@ p2 <- rbind(c(4, 0), c(5, 0), c(5, 3), c(4, 2), c(4, 0))
 
   #--- creating buffer at 'dist" meter arounf the counties ---#
       NE_buffer <- st_buffer(county_boundary, dist = 2000)
+      
       ggplot() +
         geom_sf(data = NE_buffer, fill = "blue", alpha = 0.3) +
         geom_sf(data = county_boundary, aes(fill = NAME)) +
@@ -407,6 +409,121 @@ p2 <- rbind(c(4, 0), c(5, 0), c(5, 3), c(4, 2), c(4, 0))
       #-------------------------------------------------------------------
         
 
+#--- calculating linear distance between points ---#
+        st_distance(urnrd_wells_sf[1:5,], urnrd_wells_sf[1:5,])
+
+        
+#--- Combining features without resolving boundaries ---#
+        NE_county_combine <- st_combine(county_boundary)
+        # plot the data
+        ggplot(NE_county_combine)+
+          geom_sf()+
+          theme_void()
+        
+#--- Combining features with resolving boundaries ---#
+        NE_country_union <- st_union(county_boundary)
+        # plot the data
+        ggplot(NE_country_union)+
+          geom_sf()+
+          theme_void()
+        
+#--- simplifying map object for faster rendering ---#
+        # load data
+        IL_county <- st_read("Data/Chapter 2/IL_county_detailed.geojson")
+        #plot the map data (only cook county)
+        ggplot()+
+          geom_sf(data = IL_county %>% filter(NAME %in% "Cook County"))+
+          theme_void()
+          #since the north east coener has some non linear parts, so lets
+          #simplify this
+        
+        # create a data set that contains only Cook County
+        Cook_county_IL <- IL_county %>%
+                          filter(NAME == "Cook County")
+        # simplify the border
+        Cook_simple <- st_simplify(Cook_county_IL, dTolerance = 5000)
+          #dTolerance is the level of simplification
+        ggplot(Cook_simple)+
+          geom_sf(color = "red", fill = NA)+
+          theme_void()        
+          
+        
+        #----------------------     TRIAL     -----------------------------
+        # see how different tolerance works and looks like
+        Cook1 <- st_simplify(Cook_county_IL, dTolerance = 1000)
+        Cook2 <- st_simplify(Cook_county_IL, dTolerance = 2000)
+        Cook3 <- st_simplify(Cook_county_IL, dTolerance = 3000)
+        Cook4 <- st_simplify(Cook_county_IL, dTolerance = 4000)
+        Cook5 <- st_simplify(Cook_county_IL, dTolerance = 5000)
+        #Plot everything together
+        ggplot()+
+          geom_sf(data = Cook1, color = "red", fill = NA)+
+          geom_sf(data = Cook2, color = "green", fill = NA)+
+          geom_sf(data = Cook3, color = "blue", fill = NA)+
+          geom_sf(data = Cook4, color = "black", fill = NA)+
+          geom_sf(data = Cook5, color = "purple", fill = NA)+
+          theme_void()
+        
+        ggplot(Cook_county_IL)+geom_sf()+theme_void() | ggplot(Cook1)+geom_sf()+theme_void() | 
+        ggplot(Cook2)+geom_sf()+theme_void() | ggplot(Cook3)+geom_sf()+theme_void() | 
+        ggplot(Cook4)+geom_sf()+theme_void() | ggplot(Cook5)+geom_sf()+theme_void()
+        #-------------------------------------------------------------------
+        
+      # simplify illinois border
+        IL_simplified <- st_simplify(IL_county, dTolerance = 2000)
+      # plot everything together
+        ggplot(IL_county)+geom_sf(fill = "blue", alpha = 0.2)+theme_void() | 
+          ggplot(IL_simplified)+geom_sf(fill = "blue", alpha = 0.2)+theme_void()
+        
+      # using rmapshaper simplify the map
+        IL_rmap <- ms_simplify(IL_county, keep = 0.005)
+        #the lower the keep, the more simplified the map.
+      #Plot everything again
+        (
+            ggplot(IL_county)+geom_sf(fill = "blue", alpha = 0.2)+theme_void()+
+              labs(title = "Raw")+
+              theme(plot.title = element_text(hjust = 0.6)) | 
+              
+            ggplot(IL_simplified)+geom_sf(fill = "blue", alpha = 0.2)+theme_void()+
+              labs(title = "Simplified")+
+              theme(plot.title = element_text(hjust = 0.6)) |
+              
+            ggplot(IL_rmap)+geom_sf(fill = "blue", alpha = 0.2)+theme_void()+
+              labs(title = "RmapShaper")+
+              theme(plot.title = element_text(hjust = 0.6))
+        )
+        
+ #==============================================================================
+        
+        
+# book chapter link: https://tmieno2.github.io/R-as-GIS-for-Economists-Quarto/chapters/02-VectorDataBasics.html#non-interactive-geometrical-operations
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
       
       
