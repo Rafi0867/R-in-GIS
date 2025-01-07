@@ -89,24 +89,100 @@ pacman::p_load(
     labs(
       fill = "Polygons",
       color = "Lines",
-      shape = "Points"
+      shape = "Points",
+      title = "Combining All Simple Features" 
+    )+
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold")
     )
 
 
 
+  #===============================================================================
+  #---- st_intersects ----
+    #--- interscting points and polygons ---#
+    st_intersects(points, polygons)
+    #--- intersection analysis in matrix form ---#
+    st_intersects(points, polygons, sparse = FALSE)
+      #point is on row and polygon is on column
+    
+    #--- intersection detection for line and points ---#
+    st_intersects(points, lines, sparse = FALSE)
+    #--- intersection detection for line and polygons ---#
+    st_intersects(polygons, lines, sparse = FALSE)
+  
 
 
+#===============================================================================
+#---- st_is_with_distance ----
+#this function will identify if a point is within the specified distance or not
+#we will start with an arbitrary points
+    
+    #setting seed for exact replication
+    set.seed(38424738)
+    # point set 1
+    points_set_1 <-
+      lapply(1:5, function(x) sf::st_point(runif(2))) %>% 
+      sf::st_sfc() %>% sf::st_as_sf() %>% 
+      dplyr::mutate(id = 1:nrow(.))
+    #point set 2
+    points_set_2 <-
+      lapply(1:5, function(x) sf::st_point(runif(2))) %>% 
+      sf::st_sfc() %>% sf::st_as_sf() %>% 
+      dplyr::mutate(id = 1:nrow(.))    
+    
+    #--- plotting these two point sets ---#
+    ggplot()+
+      geom_sf_text(data = points_set_1, aes(label = id), color = "blue")+
+      geom_sf_text(data = points_set_2, aes(label = id), color = "red")+
+      theme_void()
+    
+    #We want to know which of the blue points (points_set_2) are located within 
+    #0.2 from each of the red points (points_set_1).
+    
+    #--- create a buffer at 0.2 of point set 2 ---#
+    buffer_2 <- st_buffer(points_set_2, dist = 0.2)
+
+    #--- plot everything in one graph ---#
+    ggplot()+
+      geom_sf_text(data = points_set_1, aes(label = id), color = "blue")+
+      geom_sf_text(data = points_set_2, aes(label = id), color = "red")+
+      geom_sf(data = buffer_2, fill = NA, color = "red")+theme_bw()
+    
+    #--- Confirming visual result in matrix ---#
+    st_is_within_distance(points_set_1, points_set_2, dist = 0.1)
 
 
-
-
-
-
-
-
-
-
-
+    
+#===============================================================================
+#--- Spatial Cropping ----
+    #--- data preparation ---#
+    #--- Kansas county borders ---#
+    KS_counties <-
+      readRDS("Data/Chapter 3/KS_county_borders.rds") %>%
+      sf::st_transform(32614)
+    
+    #--- High-Plains Aquifer boundary ---#
+    hpa <- 
+      sf::st_read("Data/Chapter 3/hp_bound2010.shp") %>%
+      .[1, ] %>%
+      sf::st_transform(st_crs(KS_counties))
+    
+    #--- all the irrigation wells in KS ---#
+    KS_wells <- 
+      readRDS("Data/Chapter 3/Kansas_wells.rds") %>%
+      sf::st_transform(st_crs(KS_counties))
+    
+    #--- US railroads in the Mid West region ---#
+    rail_roads_mw <- sf::st_read("Data/Chapter 3/mw_railroads.geojson")
+    
+    
+#===============================================================================
+#--- Bounding box ----
+    #--- get the bounding box of KS_wells ---#
+    (
+      bbox_KS_wells <- sf::st_bbox(KS_wells)  
+    )
 
 
 
