@@ -183,14 +183,41 @@ pacman::p_load(
     (
       bbox_KS_wells <- sf::st_bbox(KS_wells)  
     )
+    #--- check the class ---#
+    class(bbox_KS_wells)
+    # converting the bbox into sfc ---#
+    KS_wells_bbox_sfc <- sf::st_as_sfc(bbox_KS_wells) 
+    #--- plotting the bbox and wells data ---#
+    ggplot()+
+      geom_sf(data = KS_wells_bbox_sfc, color = "red", fill = NA, 
+              linewidth = 0.5 )+
+      geom_sf(data = KS_wells, size = 0.5)+
+      theme_void()
+
+#--- Cropping data using st_crop function ----
+    #--- crop hpa data to ks_wells data ---#
+    hpa_cropped_wells <- st_crop(hpa, KS_wells)
+    #plot the cropped data
+    plot(hpa_cropped_wells)
+    
+    #--- plot everything again ---#
+    ggplot()+
+      geom_sf(data = hpa_cropped_wells, fill = "blue", alpha = 0.3)+
+      geom_sf(data = KS_wells_bbox_sfc, color = "red", linewidth = 0.5, 
+              fill = NA)+
+      geom_sf(data = KS_wells, size = 0.8, color = "black")+
+      theme_void()+
+      labs(
+        caption = "The bounding box of the irrigation wells in Kansas that overlie HPA"
+      )+
+      theme(
+        plot.caption = element_text(hjust = 0.5, face = "italic")
+      )
 
 
-
-
-
-
-
-
+    
+#===============================================================================
+#--- Spatial Sub-setting ----    
 
 
 
