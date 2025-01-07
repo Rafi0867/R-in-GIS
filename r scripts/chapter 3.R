@@ -218,9 +218,50 @@ pacman::p_load(
     
 #===============================================================================
 #--- Spatial Sub-setting ----    
+    #--- plot KS county, cropped HPA in one graph ---#
+    ggplot()+
+      geom_sf(data = KS_counties)+
+      geom_sf(data = hpa_cropped_wells, fill = "blue", alpha = 0.2)+
+      theme_void()+
+      labs(
+        caption = "Kansas portion of High-Plains Aquifer and Kansas counties"
+      )+
+      theme(
+        plot.caption = element_text(hjust = 0.5, face = "italic",size = 12)
+      )
+    
+    
+    
+    #--- pull the hpa intersection KS counties only ---#
+    hpa_intersecting_county <- KS_counties[hpa_cropped_wells,]
+    #--- plot the hpa intersecting counties ---#
+    ggplot()+
+      geom_sf(data = hpa_intersecting_county, fill = NA)+
+      geom_sf(data = hpa_cropped_wells, fill = "blue", alpha = 0.2)+
+      theme_void()+
+      labs(
+        caption = "The results of spatially subsetting Kansas counties based on HPA boundary"
+      )+
+      theme(
+        plot.caption = element_text(hjust = 0.5, face= "italic", size = 12)
+      )
 
 
-
+    
+    
+    #--- idenitfy completey colvered KS counties ---#
+    counties_within_hpa <- KS_counties[hpa_cropped_wells, op = st_within]
+    #--- plot complete counties only ---#
+    ggplot()+
+      geom_sf(data = hpa_cropped_wells, fill = "blue", alpha = 0.1)+
+      geom_sf(data = counties_within_hpa, color = "black", fill = NA)+
+      theme_void()+
+      labs(
+        caption = "Counties completely within the HPA Area"
+      )+
+      theme(
+        plot.caption = element_text(hjust = 0.5, face = "italic", size = 12)
+      )
 
 
 
