@@ -174,7 +174,7 @@ pacman::p_load(
       sf::st_transform(st_crs(KS_counties))
     
     #--- US railroads in the Mid West region ---#
-    rail_roads_mw <- sf::st_read("Data/Chapter 3/mw_railroads.geojson")
+    rail_roads_mw <- sf::st_read("Data/Chapter 3/tl_2015_us_rails.prj")
     
     
 #===============================================================================
@@ -211,7 +211,7 @@ pacman::p_load(
         caption = "The bounding box of the irrigation wells in Kansas that overlie HPA"
       )+
       theme(
-        plot.caption = element_text(hjust = 0.5, face = "italic")
+        plot.caption = element_text(hjust = 0.5, face = "italic", size = 12)
       )
 
 
@@ -249,7 +249,7 @@ pacman::p_load(
 
     
     
-    #--- idenitfy completey colvered KS counties ---#
+    #--- identify complete covered KS counties ---#
     counties_within_hpa <- KS_counties[hpa_cropped_wells, op = st_within]
     #--- plot complete counties only ---#
     ggplot()+
@@ -264,6 +264,20 @@ pacman::p_load(
       )
 
 
+    #--- points(source) vs polygon(target) ---#
+    # crop KS_wells by hpa_cropped_wells
+    KS_wells_in_hpa <- KS_wells[hpa_cropped_wells,]
+    ggplot()+
+      geom_sf(data = hpa_cropped_wells, fill = "blue", alpha = 0.2)+
+      geom_sf(data = KS_wells_in_hpa, size = 0.8)+
+      theme_void()+
+      labs(
+        title = "A map of Kansas irrigation wells and HPA"
+      )+
+      theme(
+        plot.title = element_text(hjust = 0.5, face= "bold", size = 12)
+      )
+      
 
 
 
@@ -273,16 +287,7 @@ pacman::p_load(
 
 
 
-
-
-
-
-
-
-
-
-
-
+dsfsdf
 
 
 
