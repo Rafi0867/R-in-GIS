@@ -174,7 +174,8 @@ pacman::p_load(
       sf::st_transform(st_crs(KS_counties))
     
     #--- US railroads in the Mid West region ---#
-    rail_roads_mw <- sf::st_read("Data/Chapter 3/tl_2015_us_rails.prj")
+    rail_roads_mw <- sf::st_read("Data/Chapter 3/mw_railroads.geojson")
+    plot(rail_roads_mw)
     
     
 #===============================================================================
@@ -279,16 +280,35 @@ pacman::p_load(
       )
       
 
-
-
-
-
-
-
-
-
-dsfsdf
-
+    #--- line source and polygon target ---#
+    #first plot the rain roads map
+    ggplot()+
+      geom_sf(data = rail_roads_mw)+
+      theme_void()
+    #now plot the Kansas map on the above rail map
+    ggplot()+
+      geom_sf(data = KS_counties, color = "red", fill = NA, size = 1)+
+      geom_sf(data = rail_roads_mw, color = "blue", fill = NA)+
+      theme_void()+
+      labs(
+        title = "U.S. railroads and Kansas county boundaries"
+      )+
+      theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12)
+      )
+    #now crop the rail roads only for Kansas counties and drop othes
+    KS_rail <- rail_roads_mw[KS_counties, ]
+    #now plot like the last one
+    ggplot()+
+      geom_sf(data = KS_counties, color = "black", fill = NA, linewidth = 0.5)+
+      geom_sf(data = KS_rail, color = "blue", fill = NA, linewidth = 1)+
+      theme_void()+
+      labs(
+        title = "U.S. railroads and Kansas county boundaries"
+      )+
+      theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12)
+      )
 
 
 
