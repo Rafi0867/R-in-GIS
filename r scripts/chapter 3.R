@@ -468,15 +468,98 @@ pacman::p_load(
 
     #--- plot point sets ---#
     ggplot() +
-      geom_sf(data = sf::st_buffer(points_set_1, dist = 0.2), color = "red", fill = NA) +
+      geom_sf(data = sf::st_buffer(points_set_1, dist = 0.2), color = "red", 
+              fill = NA) +
       geom_sf_text(data = points_set_1, aes(label = id_1), color = "red") +
-      geom_sf_text(data = points_set_2, aes(label = id_2), color = "blue")
+      geom_sf_text(data = points_set_2, aes(label = id_2), color = "blue")+
+      theme_minimal()
+    
+    #--- join point set 1 and 2 ---#
+    sf::st_join(points_set_1, points_set_2, join = \(x, y) 
+                st_is_within_distance(x, y, dist = 0.2))
 
 
-
-
-
-
+#================================================================================
+#--- Spatial intersection (cropping join) ----
+    #--- we will use the previous toy example ---#
+    ggplot() +
+      geom_sf(data = polygons, aes(fill = polygon_name), alpha = 0.3) +
+      scale_fill_discrete(name = "Polygons") +
+      geom_sf(data = lines, aes(color = line_name)) +
+      scale_color_discrete(name = "Lines") +
+      theme_void()
+    #--- finding the intersection of the lines and polygons ---#
+    (
+      intersections_lp <- 
+        sf::st_intersection(lines, polygons) %>% 
+        dplyr::mutate(int_name = paste0(line_name, "-", polygon_name))
+    )
+    #---plotting the intersection data ---#
+    plot(intersections_lp)
+      #seems like we found the intersections only in this data set
+    ggplot() +
+      #--- here are all the original polygons  ---#
+      geom_sf(data = polygons, aes(fill = polygon_name), alpha = 0.3) +
+      #--- here is what is returned after st_intersection ---#
+      geom_sf(data = intersections_lp, aes(color = int_name), size = 1.5)+
+      theme_void()
+    
+    #--- finding intersections of polygons ---#
+    (
+      intersections_pp <- 
+        sf::st_intersection(polygons[c(1,3), ], polygons[2, ]) %>% 
+        dplyr::mutate(int_name = paste0(polygon_name, "-", polygon_name.1))
+    )
+    #---plot the data ---#
+    ggplot()+
+      geom_sf(data = polygons, aes(fill = polygon_name), alpha = 0.2)+
+      geom_sf(data = intersections_pp, aes(color = int_name), linewidth = 1)+
+      theme_void()+
+      labs(
+        caption = "The outcome of the intersections of polygon 2 and polygons 1 and 3"
+      )+
+      theme(
+        plot.caption = element_text(hjust = 0.5, face = "italic", size = 12)
+      )
+    
+    
+ #==============================================================================
+#--- Calculating Area weighted Average ----
+    (
+      HUC_intersections <- 
+        sf::st_intersection(HUC_IA, IA_corn) %>% 
+        dplyr::mutate(huc_county = paste0(HUC_CODE, "-", county_code))
+    )
+    #--- inital plotting what kind of data we are going to get ---#
+    ggplot()+
+      geom_sf(data = HUC_intersections)
+    
+    #--- Now plot formally ---#
+      ggplot()+
+      geom_sf(data = HUC_intersections %>% filter(HUC_CODE == 10170203),
+              aes(fill = huc_county))+
+        theme_void()+
+        labs(
+          caption = "Intersections of a HUC unit and Iowa counties",
+          fill = "HUC County Code"
+        )+
+        theme(
+          plot.caption = element_text(hjust = 0.5, face = "italic", size = 12)
+        )+
+        scale_fill_viridis_d()
+      
+      #--- Now calculate the area weighted average ---#
+      (
+        HUC_aw_acres <- 
+          HUC_intersections %>% 
+          #--- get area ---#
+          dplyr::mutate(area = as.numeric(st_area(.))) %>% 
+          #--- get area-weight by HUC unit ---#
+          dplyr::group_by(HUC_CODE) %>% 
+          dplyr::mutate(weight = area / sum(area)) %>% 
+          #--- calculate area-weighted corn acreage by HUC unit ---#
+          dplyr::summarize(aw_acres = sum(weight * acres))
+      )
 
 
 
