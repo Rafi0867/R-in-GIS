@@ -309,20 +309,168 @@ pacman::p_load(
       theme(
         plot.title = element_text(hjust = 0.5, face = "bold", size = 12)
       )
+    
+    
+    #--- Polygon source vs point target ---#
+    KS_counties_intersected <- KS_counties[KS_wells_in_hpa, ]  
+    # plot the resulted counties
+    ggplot()+
+      geom_sf(data = KS_counties, fill = NA, color = "black")+
+      geom_sf(data = KS_counties_intersected, fill = "blue", alpha = 0.3)+
+      geom_sf(data = KS_wells_in_hpa, size = 1)+
+      theme_void()+
+      labs(
+        caption = "Counties that have at least one well"
+      )+
+      theme(
+        plot.caption = element_text(hjust = 0.5, face = "italic", size = 12)
+      )
 
+    
+#===============================================================================
+#--- Different Types of Spatial Join ----
+      
+    #---Case 1: points (target) vs polygons (source)---#
+    #here we actually want to project fake corn price data to original wells data
+    #lets create a fake county level corn price data
+    KS_corn_price <-
+      KS_counties %>%
+      dplyr::mutate(corn_price = seq(3.2, 3.9, length = nrow(.))) %>%
+      dplyr::select(COUNTYFP, corn_price)
+    #plot the data
+    ggplot()+
+      geom_sf(data = KS_corn_price, aes(fill = corn_price))+
+      scale_fill_viridis_c() +
+      theme_void()
+    # now we need to join wells data with price data
+    KS_wells_price <- st_join(KS_wells, KS_corn_price)
+    #now plot the final thing again
+    ggplot()+
+      geom_sf(data = KS_counties)+
+      geom_sf(data = KS_wells_price, aes(color = corn_price))+
+      scale_fill_viridis_c()+
+      theme_void()+
+      labs(
+        caption = "Map of wells color-differentiated by corn price",
+        color = "Corn Price"
+      )+
+      theme(
+        plot.caption = element_text(hjust = 0.5, face = "italic", size = 12)
+      )
 
+    
+    #---Case 2: polygons (target) vs points (source)---#
+    #--- spatial join ---#
+    KS_County_wells <- sf::st_join(KS_counties, KS_wells)
+    plot(KS_County_wells)
+    #--- take a look ---#
+    dplyr::select(KS_County_wells, COUNTYFP, site, af_used)
+    #summarizing the data
+    KS_County_wells %>% 
+      dplyr::group_by(COUNTYFP) %>% 
+      dplyr::summarize(af_used = sum(af_used, na.rm = TRUE)) 
+    #plot the data
+    ggplot() +
+      geom_sf(data = KS_counties) +
+      geom_sf(data = KS_wells, aes(color = af_used), size = 0.2) +
+      scale_color_viridis_c(name = "Groundwater Pumping (acre-feet)") +
+      theme_void() +
+      theme(legend.position = "bottom",
+            plot.title = element_text(hjust = 0.5, face = "bold"))+
+      labs(
+        title = "Map of wells color-differentiated by corn price"
+      )
+    
+    
+    #---Case 3: polygons (target) vs polygons (source)---#
+    #load Iowa corn data
+    IA_corn <- readRDS("Data/Chapter 3/IA_corn.rds")
+    IA_corn
+    #make a plot of counties color based on corn acres
+    ggplot(IA_corn)+
+      geom_sf(aes(fill = acres))+
+      scale_fill_viridis_c(name = "Corn Acreage")+
+      theme_void()+
+      labs(
+        caption = "Map of Iowa counties color-differentiated by corn planted acreage"
+      )+
+      theme(
+        plot.caption  = element_text(hjust = 0.7, face = "italic", size = 12)
+      )
+    #import HUC units
+    HUC_IA <- 
+      sf::st_read("Data/Chapter 3/huc250k.shp") %>% 
+      dplyr::select(HUC_CODE) %>% 
+      #--- reproject to the CRS of IA ---#
+      sf::st_transform(st_crs(IA_corn)) %>% 
+      #--- select HUC units that overlaps with IA ---#
+      .[IA_corn, ]
+    #simply plot the huc values
+    ggplot(HUC_IA) + 
+      geom_sf() +
+      theme_void()
+    #plot the corn data on huc map
+    ggplot()+
+      geom_sf(data = HUC_IA)+
+      geom_sf(data = IA_corn, aes(fill = acres), alpha = 0.4)+
+      scale_fill_viridis_c()+
+      theme_void()+
+      labs(
+        caption = "Map of HUC units superimposed on the counties in Iowas"
+      )+
+      theme(
+        plot.caption = element_text(hjust = 0.5, face = "italic", size = 12)
+      )
+    
+    #now join the two data sets
+    IA_huc_corn <- st_join(HUC_IA, IA_corn)
+    ggplot()+
+      geom_sf(data = IA_huc_corn, aes(fill = acres))+
+      scale_fill_viridis_c(name = "Acres")+
+      theme_void()
+    #filer one region
+    #--- get the HUC unit with `HUC_CODE ==10170203`  ---#
+    (
+      temp_HUC_county <- filter(IA_huc_corn, HUC_CODE == 10170203)
+    )
+    #plot the region
+    temp_HUC_county %>%
+      dplyr::mutate(county_text = paste0("County Code: ", county_code)) %>%
+      ggplot(.) +
+      geom_sf() +
+      facet_wrap(county_text ~ ., nrow = 2) +
+      theme_void()
 
+    
+    #more advanced way to summarize data by county
+    #--- sum ---#
+    data <- aggregate(dplyr::select(KS_wells, af_used), KS_counties, FUN = sum)
+    ggplot()+
+      geom_sf(data = KS_counties)+
+      geom_sf(data = data, aes(fill = af_used))+
+      theme_void()
+    
+#===============================================================================
+#--- Other topological relationships ----
+    set.seed(29841)
+    
+    points_set_1 <-
+      lapply(1:5, function(x) sf::st_point(runif(2))) %>%
+      sf::st_sfc() %>%
+      sf::st_as_sf() %>%
+      dplyr::mutate(id_1 = 1:nrow(.))
+    
+    points_set_2 <-
+      lapply(1:5, function(x) sf::st_point(runif(2))) %>%
+      sf::st_sfc() %>%
+      sf::st_as_sf() %>%
+      dplyr::mutate(id_2 = 1:nrow(.))
 
-
-
-
-
-
-
-
-
-
-
+    #--- plot point sets ---#
+    ggplot() +
+      geom_sf(data = sf::st_buffer(points_set_1, dist = 0.2), color = "red", fill = NA) +
+      geom_sf_text(data = points_set_1, aes(label = id_1), color = "red") +
+      geom_sf_text(data = points_set_2, aes(label = id_2), color = "blue")
 
 
 
