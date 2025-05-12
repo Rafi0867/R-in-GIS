@@ -33,7 +33,9 @@ pacman::p_load(
   mapview,
   dplyr,
   sf,
-  lubridate
+  lubridate,
+  downloader,
+  ncdf4
 )
 
 
@@ -153,69 +155,46 @@ values_from_rs[1:20,]
 
 
 
-# Converting raster into data frame
+# Converting raster into data frame --------------------
 IA_cdl_df <- as.data.frame(IA_sptoraster, xy = TRUE)
+  # this is not working. I need to fix this. However this is not super
+  # necessary to go through the training materials
 
 
 
 
+# Working with netCDF files ---------------------------------------------------
+# download the data from web
+downloader::download(
+  url = str_c("http://www.northwestknowledge.net/metdata/data/pr_2018.nc"),
+  destfile = "Data/Chapter 4/pr_2018.nc",
+  mode = "wb"
+)
 
+# now load the data set
+pr_2018_gm <- rast("Data/Chapter 4/pr_2018.nc")
+print(pr_2018_gm)
+head(names(pr_2018_gm))
 
 
+# inspecting the netcdf data file that we have loaded previously
+(
+  pr_2018_nc <- nc_open("Data/Chapter 4/pr_2018.nc")
+)
 
 
+# finding out the start date of the data file
+lubridate::ymd("1900-01-01")+43099
+  # since 43099 is the first date when we inspected the data set using head command
+  # so adding the global start date of 01st jan of 1900 would give us the actual
+  # start date of the data set.
 
 
+# for more details about netcdf: https://pjbartlein.github.io/REarthSysSci/netCDF.html
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# END #
